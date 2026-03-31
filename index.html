@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ذهب قطر | أسعار الذهب العالمية والمحلية</title>
+    <title>ذهب قطر | أسعار الذهب - فوري وسريع</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * {
@@ -227,6 +227,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            flex-wrap: wrap;
         }
         .news-item {
             font-size: 0.85rem;
@@ -256,6 +257,7 @@
             display: flex;
             align-items: center;
             gap: 5px;
+            flex-wrap: wrap;
         }
 
         .status-bar {
@@ -270,12 +272,44 @@
             gap: 10px;
         }
 
-        .refresh-indicator { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; }
+        .refresh-indicator { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; flex-wrap: wrap; }
         .spinner { width: 16px; height: 16px; border: 2px solid #dba450; border-top: 2px solid #f5bc70; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .btn-refresh { background: #c2822c; border: none; padding: 6px 20px; border-radius: 40px; color: white; cursor: pointer; }
 
         .footnote { text-align: center; padding: 15px; font-size: 0.65rem; color: #b59762; background: var(--footnote-bg); border-top: 1px solid var(--border-color); }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 15px;
+            color: white;
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #e6b422;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .timeout-warning {
+            background: #ff9800;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+        }
 
         @media (max-width: 550px) {
             .price-number { font-size: 1.6rem; }
@@ -290,7 +324,7 @@
         <div class="header">
             <button class="theme-toggle" id="themeToggle">🌙 الوضع الليلي</button>
             <h1>📊 سعر الذهب <span>عالمي · الفردان · PAMP</span></h1>
-            <div style="font-size: 0.7rem; margin-top: 5px;">تحديث تلقائي | رسم بياني | تنبيهات</div>
+            <div style="font-size: 0.7rem; margin-top: 5px;">تحديث سريع | رسم بياني | تنبيهات</div>
         </div>
 
         <div class="controls-bar">
@@ -322,7 +356,6 @@
             <canvas id="goldChart" width="400" height="200" style="max-height: 250px; width: 100%;"></canvas>
         </div>
 
-        <!-- أخبار الذهب مع روابط حقيقية -->
         <div class="news-section">
             <div class="news-title">
                 📰 آخر أخبار الذهب
@@ -332,10 +365,14 @@
         </div>
 
         <div class="status-bar">
-            <div class="refresh-indicator"><span class="spinner" id="spinnerIcon" style="display: none;"></span><span id="autoStatus">⏳ جاهز</span></div>
+            <div class="refresh-indicator">
+                <span class="spinner" id="spinnerIcon" style="display: none;"></span>
+                <span id="autoStatus">⏳ جاهز</span>
+                <span id="speedWarning" style="display: none;" class="timeout-warning">⚠️ اتصال بطيء - جاري المحاولة...</span>
+            </div>
             <button class="btn-refresh" id="refreshBtn">🔄 تحديث الآن</button>
         </div>
-        <div class="footnote">بيانات حية من GoldAPI.io | تحديث تلقائي | أخبار من مصادر موثوقة (Bloomberg, Reuters, CNBC, Investing.com)</div>
+        <div class="footnote">بيانات من GoldAPI.io | تحديث سريع | أخبار من مصادر موثوقة</div>
     </div>
 </div>
 
@@ -351,64 +388,24 @@
     let alertTarget = null;
     let updateIntervalId = null;
     let currentIntervalMinutes = 60;
+    let isFetching = false;
 
     const ALFARDAN_MARGIN = 12.35;
     const PAMP_MARGIN = 5.0;
 
-    // قائمة الأخبار مع روابط حقيقية
     const newsData = [
-        {
-            title: "📈 الذهب يرتفع مع تراجع الدولار وانتظار بيانات التضخم الأمريكية",
-            source: "Bloomberg",
-            url: "https://www.bloomberg.com/news/articles/2025-03-30/gold-rises-as-dollar-slides-before-us-inflation-data",
-            icon: "📈"
-        },
-        {
-            title: "🏦 البنوك المركزية تواصل شراء الذهب لدعم الاحتياطيات بأعلى مستوى منذ 55 عاماً",
-            source: "Reuters",
-            url: "https://www.reuters.com/markets/commodities/central-banks-bought-most-gold-first-half-2024-since-1967-2025-03-29/",
-            icon: "🏦"
-        },
-        {
-            title: "⚡ التوترات الجيوسياسية في الشرق الأوسط تزيد الإقبال على الذهب كملاذ آمن",
-            source: "CNBC",
-            url: "https://www.cnbc.com/2025/03/28/gold-prices-hit-record-high-as-middle-east-tensions-escalate.html",
-            icon: "⚡"
-        },
-        {
-            title: "📊 محللون: الذهب قد يتجاوز 5000 دولار للأونصة بنهاية العام بدعم من الفيدرالي",
-            source: "Investing.com",
-            url: "https://www.investing.com/news/commodities-news/gold-could-hit-5000-by-year-end-analysts-say-3789456",
-            icon: "📊"
-        },
-        {
-            title: "🇶🇦 الطلب على الذهب في قطر يرتفع بنسبة 15% مع تراجع أسعار الفائدة",
-            source: "Gulf Times",
-            url: "https://www.gulf-times.com/article/684567/business/gold-demand-in-qatar-rises-15-on-rate-cut-hopes",
-            icon: "🇶🇦"
-        },
-        {
-            title: "💰 الفردان للصرافة يعلن عن عروض خاصة على سبائك الذهب بمناسبة شهر رمضان",
-            source: "الشرق",
-            url: "https://www.al-sharq.com/business/gold/alfardan-offers-ramadan-gold-promotions",
-            icon: "💰"
-        },
-        {
-            title: "🌍 الصين تواصل زيادة احتياطياتها من الذهب للشهر السابع على التوالي",
-            source: "Financial Times",
-            url: "https://www.ft.com/content/china-gold-reserves-increase-march-2025",
-            icon: "🌍"
-        },
-        {
-            title: "📉 الذهب يسجل أعلى إغلاق شهري مع ترقب خفض الفائدة الأمريكية",
-            source: "CNN Business",
-            url: "https://edition.cnn.com/2025/03/27/investing/gold-price-record-monthly-close",
-            icon: "📉"
-        }
+        { title: "📈 الذهب يرتفع مع تراجع الدولار وانتظار بيانات التضخم الأمريكية", source: "Bloomberg", url: "https://www.bloomberg.com/news/articles/2025-03-30/gold-rises-as-dollar-slides-before-us-inflation-data", icon: "📈" },
+        { title: "🏦 البنوك المركزية تواصل شراء الذهب لدعم الاحتياطيات بأعلى مستوى منذ 55 عاماً", source: "Reuters", url: "https://www.reuters.com/markets/commodities/central-banks-bought-most-gold-first-half-2024-since-1967-2025-03-29/", icon: "🏦" },
+        { title: "⚡ التوترات الجيوسياسية في الشرق الأوسط تزيد الإقبال على الذهب كملاذ آمن", source: "CNBC", url: "https://www.cnbc.com/2025/03/28/gold-prices-hit-record-high-as-middle-east-tensions-escalate.html", icon: "⚡" },
+        { title: "📊 محللون: الذهب قد يتجاوز 5000 دولار للأونصة بنهاية العام", source: "Investing.com", url: "https://www.investing.com/news/commodities-news/gold-could-hit-5000-by-year-end-analysts-say-3789456", icon: "📊" },
+        { title: "🇶🇦 الطلب على الذهب في قطر يرتفع بنسبة 15% مع تراجع أسعار الفائدة", source: "Gulf Times", url: "https://www.gulf-times.com/article/684567/business/gold-demand-in-qatar-rises-15-on-rate-cut-hopes", icon: "🇶🇦" },
+        { title: "💰 الفردان للصرافة يعلن عن عروض خاصة على سبائك الذهب", source: "الشرق", url: "https://www.al-sharq.com/business/gold/alfardan-offers-ramadan-gold-promotions", icon: "💰" },
+        { title: "🌍 الصين تواصل زيادة احتياطياتها من الذهب للشهر السابع على التوالي", source: "Financial Times", url: "https://www.ft.com/content/china-gold-reserves-increase-march-2025", icon: "🌍" },
+        { title: "📉 الذهب يسجل أعلى إغلاق شهري مع ترقب خفض الفائدة الأمريكية", source: "CNN Business", url: "https://edition.cnn.com/2025/03/27/investing/gold-price-record-monthly-close", icon: "📉" }
     ];
 
     function loadStoredData() {
-        let stored = localStorage.getItem('goldPrices');
+        let stored = localStorage.getItem('goldPricesFast');
         if(stored) {
             try{
                 let data = JSON.parse(stored);
@@ -427,7 +424,7 @@
 
     function saveToLocalStorage() {
         let data = { globalUSD: globalGoldUSD, alfardanQAR: alfardanGoldQAR, exchangeRate, chartHistory, alertTarget };
-        localStorage.setItem('goldPrices', JSON.stringify(data));
+        localStorage.setItem('goldPricesFast', JSON.stringify(data));
     }
 
     function calculateAllPrices() {
@@ -460,7 +457,6 @@
         }
     }
 
-    // عرض الأخبار مع روابط قابلة للنقر
     function displayNews() {
         newsListDiv.innerHTML = newsData.map(news => `
             <div class="news-item">
@@ -476,9 +472,30 @@
         `).join('');
     }
 
-    async function fetchGlobalPrice() {
+    async function fetchGlobalPriceWithTimeout() {
+        if(isFetching) return false;
+        isFetching = true;
+        
+        const speedWarning = document.getElementById('speedWarning');
+        let timeoutId;
+        
         try {
-            const res = await fetch('https://www.goldapi.io/api/XAU/USD', { headers: { 'x-access-token': 'demo' } });
+            // عرض تحذير بعد 3 ثواني إذا كان الاتصال بطيئاً
+            timeoutId = setTimeout(() => {
+                speedWarning.style.display = 'inline-block';
+                autoStatusSpan.innerHTML = '⚠️ اتصال بطيء... جاري إكمال التحديث';
+            }, 3000);
+            
+            // محاولة جلب السعر مع مهلة 8 ثواني
+            const controller = new AbortController();
+            const fetchTimeout = setTimeout(() => controller.abort(), 8000);
+            
+            const res = await fetch('https://www.goldapi.io/api/XAU/USD', { 
+                headers: { 'x-access-token': 'demo' },
+                signal: controller.signal
+            });
+            clearTimeout(fetchTimeout);
+            
             if(res.ok) {
                 const data = await res.json();
                 if(data.price) {
@@ -491,19 +508,34 @@
                     }
                     globalGoldUSD = newPrice;
                 }
+            } else {
+                throw new Error('API response not ok');
             }
+            
+            // جلب سعر الصرف
             const exRes = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=QAR');
             if(exRes.ok) {
                 const exData = await exRes.json();
                 if(exData.rates?.QAR) exchangeRate = parseFloat(exData.rates.QAR);
             }
+            
             globalGoldQAR = globalGoldUSD * exchangeRate;
             calculateAllPrices();
             updateUI();
             updateChart();
             saveToLocalStorage();
+            
+            clearTimeout(timeoutId);
+            speedWarning.style.display = 'none';
             return true;
-        } catch(e) { console.warn(e); return false; }
+        } catch(e) {
+            console.warn('Fetch error:', e);
+            clearTimeout(timeoutId);
+            autoStatusSpan.innerHTML = '⚠️ اتصال بطيء - عرض آخر سعر محفوظ';
+            return false;
+        } finally {
+            isFetching = false;
+        }
     }
 
     function updateChart() {
@@ -517,12 +549,29 @@
     }
 
     async function fullRefresh() {
+        if(isFetching) {
+            autoStatusSpan.innerHTML = '⏳ جاري التحديث بالفعل...';
+            return;
+        }
+        
         spinnerIcon.style.display = 'inline-block';
-        autoStatusSpan.innerHTML = 'جاري التحديث...';
-        await fetchGlobalPrice();
-        autoStatusSpan.innerHTML = `✅ تم التحديث الساعة ${new Date().toLocaleTimeString('ar-EG')}`;
+        autoStatusSpan.innerHTML = '🔄 جلب أحدث الأسعار...';
+        
+        const success = await fetchGlobalPriceWithTimeout();
+        
+        if(success) {
+            autoStatusSpan.innerHTML = `✅ تم التحديث الساعة ${new Date().toLocaleTimeString('ar-EG')}`;
+        } else {
+            autoStatusSpan.innerHTML = '⚠️ تم عرض آخر سعر محفوظ (اتصال بطيء)';
+        }
+        
         spinnerIcon.style.display = 'none';
-        setTimeout(() => { if(autoStatusSpan.innerHTML.includes('تم التحديث')) autoStatusSpan.innerHTML = '⏳ جاهز'; }, 2500);
+        
+        setTimeout(() => { 
+            if(autoStatusSpan.innerHTML.includes('تم التحديث') || autoStatusSpan.innerHTML.includes('آخر سعر محفوظ')) {
+                autoStatusSpan.innerHTML = '⏳ جاهز';
+            }
+        }, 3000);
     }
 
     function startAutoRefresh(minutes) {
@@ -530,14 +579,13 @@
         updateIntervalId = setInterval(fullRefresh, minutes * 60 * 1000);
     }
 
-    // مشاركة السعر
+    // Event Listeners
     document.getElementById('shareBtn').onclick = () => {
         let text = `سعر الذهب اليوم:\nالعالمي: ${globalGoldUSD} دولار (${globalGoldQAR.toFixed(2)} ريال)\nالفردان: ${alfardanGoldQAR.toFixed(2)} ريال\nPAMP: ${pampGoldQAR.toFixed(2)} ريال`;
         if(navigator.share) navigator.share({title: 'أسعار الذهب', text});
         else alert(text);
     };
 
-    // التنبيهات
     document.getElementById('alertSettingBtn').onclick = () => { document.getElementById('alertPanel').style.display = 'flex'; };
     document.getElementById('cancelAlertBtn').onclick = () => { document.getElementById('alertPanel').style.display = 'none'; };
     document.getElementById('saveAlertBtn').onclick = () => {
@@ -557,7 +605,6 @@
         autoStatusSpan.innerHTML = `🔄 التحديث كل ${currentIntervalMinutes} دقيقة`;
     };
 
-    // الوضع الليلي
     document.getElementById('themeToggle').onclick = () => {
         document.body.classList.toggle('dark');
         document.getElementById('themeToggle').innerHTML = document.body.classList.contains('dark') ? '☀️ وضع النهار' : '🌙 الوضع الليلي';
@@ -565,14 +612,22 @@
 
     document.getElementById('refreshBtn').onclick = async () => { await fullRefresh(); };
 
+    const newsListDiv = document.getElementById('newsList');
+
     async function init() {
         loadStoredData();
         displayNews();
         updateUI();
-        await fetchGlobalPrice();
         updateChart();
+        
+        // محاولة التحديث الأول بدون انتظار طويل
+        setTimeout(() => {
+            fullRefresh();
+        }, 500);
+        
         startAutoRefresh(currentIntervalMinutes);
     }
+    
     init();
 </script>
 </body>
