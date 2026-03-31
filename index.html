@@ -8,69 +8,69 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-/* نفس CSS بدون تغيير */
+body {font-family: Arial; background:#111; color:#fff; padding:20px}
+.news-item {padding:10px;border-bottom:1px solid #333}
+.news-link {color:#e6b422;text-decoration:none}
+.news-link:hover {color:#fff}
+button {padding:10px 15px; margin:10px; cursor:pointer}
 </style>
 </head>
 
 <body>
-<div id="newsList">⏳ جاري تحميل الأخبار بسرعة...</div>
+
+<h2>📊 سعر الذهب</h2>
+
+<button id="refreshBtn">🔄 تحديث الآن</button>
+
+<div id="newsList">⏳ جاري تحميل الأخبار...</div>
+
 <canvas id="goldChart"></canvas>
 
 <script>
 
 // ---------- المتغيرات ----------
-let globalGoldUSD = 4566.50, globalGoldQAR = 16622.06;
-let alfardanGoldUSD = 5130.00, alfardanGoldQAR = 18675.00;
-let pampGoldUSD = 4794.82, pampGoldQAR = 17453.16;
+let globalGoldUSD = 4566.50;
 let exchangeRate = 3.64;
 let chartHistory = [];
 let chart = null;
 let isFetching = false;
 
-const ALFARDAN_MARGIN = 12.35;
-const PAMP_MARGIN = 5.0;
-
-const newsData = [
-    { title: "📈 الذهب يرتفع مع تراجع الدولار", source: "Bloomberg" },
-    { title: "🏦 البنوك المركزية تشتري الذهب", source: "Reuters" },
-    { title: "⚡ التوترات تزيد الطلب على الذهب", source: "CNBC" }
-];
-
 // ---------- تحميل البيانات ----------
 function loadStoredData() {
-    let stored = localStorage.getItem('goldPricesFast');
-    if(stored){
-        let data = JSON.parse(stored);
-        if(data.globalUSD) globalGoldUSD = data.globalUSD;
-        if(data.chartHistory) chartHistory = data.chartHistory;
-    }
-
     if(chartHistory.length === 0){
         for(let i=0;i<24;i++) chartHistory.push(globalGoldUSD);
     }
 }
 
-// ---------- الحساب ----------
-function calculateAllPrices() {
-    alfardanGoldUSD = globalGoldUSD * (1 + ALFARDAN_MARGIN/100);
-    pampGoldUSD = globalGoldUSD * (1 + PAMP_MARGIN/100);
-}
-
-// ---------- عرض الأخبار (محسّن) ----------
-let newsLoaded = false;
-
-function displayNews() {
-    if(newsLoaded) return;
-    newsLoaded = true;
-
+// ---------- عرض الأخبار (محدثة 🔥) ----------
+async function displayNews() {
     const newsListDiv = document.getElementById('newsList');
+    newsListDiv.innerHTML = "⏳ جاري تحميل الأخبار...";
 
-    newsListDiv.innerHTML = newsData.map(news => `
-        <div style="padding:8px;border-bottom:1px solid #ddd;">
-            ${news.title}
-            <div style="font-size:12px;color:#777;">${news.source}</div>
-        </div>
-    `).join('');
+    try {
+        const res = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https://news.google.com/rss/search?q=gold&hl=ar&gl=QA&ceid=QA:ar");
+        const data = await res.json();
+
+        if (data.items && data.items.length > 0) {
+
+            newsListDiv.innerHTML = data.items.slice(0, 6).map(news => `
+                <div class="news-item">
+                    <a href="${news.link}" target="_blank" class="news-link">
+                        📰 ${news.title}
+                    </a>
+                    <div style="font-size:12px;color:#aaa;">
+                        ⏱️ ${new Date(news.pubDate).toLocaleString('ar-EG')}
+                    </div>
+                </div>
+            `).join('');
+
+        } else {
+            newsListDiv.innerHTML = "⚠️ لا توجد أخبار حالياً";
+        }
+
+    } catch (e) {
+        newsListDiv.innerHTML = "⚠️ فشل تحميل الأخبار";
+    }
 }
 
 // ---------- الرسم ----------
@@ -90,13 +90,13 @@ function updateChart() {
             }]
         },
         options: {
-            animation: false, // 🔥 مهم
+            animation: false,
             responsive: true
         }
     });
 }
 
-// ---------- جلب البيانات ----------
+// ---------- جلب السعر ----------
 async function fetchData() {
     if(isFetching) return;
     isFetching = true;
@@ -109,9 +109,11 @@ async function fetchData() {
         if(res.ok){
             const data = await res.json();
             globalGoldUSD = data.price;
+
+            if(chartHistory.length >= 24) chartHistory.shift();
+            chartHistory.push(globalGoldUSD);
         }
 
-        calculateAllPrices();
         updateChart();
 
     } catch(e) {
@@ -121,27 +123,34 @@ async function fetchData() {
     isFetching = false;
 }
 
-// ---------- التهيئة (المهم 🔥) ----------
+// ---------- التحديث الكامل ----------
+async function fullRefresh() {
+    await fetchData();
+    await displayNews(); // 🔥 تحديث الأخبار أيضاً
+}
+
+// ---------- التهيئة ----------
 function init() {
 
     loadStoredData();
 
-    // 🔥 عرض الأخبار فوراً (بدون تأخير)
+    // 🔥 تحميل الأخبار فوراً
     requestAnimationFrame(() => {
         displayNews();
     });
 
-    // 🔥 تأجيل العمليات الثقيلة
+    // تحميل الشارت
     setTimeout(() => {
-        calculateAllPrices();
         updateChart();
     }, 0);
 
-    // 🔥 جلب البيانات لاحقاً
+    // تحديث البيانات بعد قليل
     setTimeout(() => {
         fetchData();
     }, 500);
 }
+
+document.getElementById('refreshBtn').onclick = fullRefresh;
 
 init();
 
