@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ذهب قطر | أسعار الذهب الحية</title>
+    <title>بورصة الذهب القطرية | الأونصة</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; transition: all 0.2s ease; }
@@ -36,13 +36,10 @@
         .price-amount { margin: 12px 0; display: flex; align-items: baseline; justify-content: flex-start; gap: 8px; }
         .price-label { font-size: 0.8rem; color: #b87a2e; font-weight: bold; min-width: 35px; }
         .price-number { font-size: 2.2rem; font-weight: 800; color: var(--price-color); }
-        .currency { font-size: 1rem; color: #b87a2e; font-weight: bold; }
         .chart-container { padding: 20px 25px; border-top: 1px solid var(--border-color); }
         .news-section { padding: 20px 25px; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.01); }
         .news-title { font-weight: bold; margin-bottom: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
         .news-item { font-size: 0.88rem; padding: 12px 0; border-bottom: 1px dashed var(--border-color); display: block; text-decoration: none; color: var(--price-color); line-height: 1.6; }
-        .news-item:hover { background: rgba(0,0,0,0.02); }
-        .news-item span { font-size: 0.75rem; color: #888; margin-left: 10px; display: inline-block; }
         .status-bar { background: var(--status-bg); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
         .btn-refresh { background: #c2822c; border: none; padding: 10px 25px; border-radius: 40px; color: white; cursor: pointer; font-weight: bold; }
         .spinner { width: 16px; height: 16px; border: 2px solid #fff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-left: 8px; }
@@ -88,19 +85,22 @@
 </div>
 
 <script>
-    let globalGoldUSD = 2150.00; 
+    const API_KEY = 'goldapi-14r6r2smned9zw6-io'; 
+    let globalGoldUSD = 4571.20; 
     let exchangeRate = 3.64;
     let chartHistory = [];
     let chart = null;
+
+    // نسبة الفردان المستخرجة من تحليلك السابق (12.35% فوق السعر العالمي)
+    const ALFARDAN_PREMIUM = 1.1235; 
 
     async function updateAllData() {
         const btn = document.getElementById('refreshBtn');
         btn.innerHTML = '<span class="spinner"></span> جاري التحديث...';
         
         try {
-            // 1. جلب السعر
             const res = await fetch('https://www.goldapi.io/api/XAU/USD', { 
-                headers: { 'x-access-token': 'goldapi-1brp87slm3r7p6w-io' } 
+                headers: { 'x-access-token': API_KEY } 
             });
             const data = await res.json();
             if(data.price) {
@@ -109,27 +109,41 @@
                 chartHistory.push(globalGoldUSD);
             }
 
-            // 2. جلب الأخبار العربية
             await fetchArabicNews();
-
             renderPrices();
             updateChart();
             
         } catch(e) {
             console.log("Error during update");
         }
-        
         btn.innerHTML = '🔄 تحديث البيانات الآن';
     }
 
     function renderPrices() {
-        const alfardanMargin = 1.1235; 
-        const pampMargin = 1.05;      
-
+        // الحسابات بناءً على النسبة التي طلبت ضبطها
         const cards = [
-            { title: "السعر العالمي", icon: "🌍", usd: globalGoldUSD, qar: globalGoldUSD * exchangeRate, src: "GoldAPI.io" },
-            { title: "الفردان للصرافة", icon: "🏦", usd: globalGoldUSD * alfardanMargin, qar: globalGoldUSD * alfardanMargin * exchangeRate, src: "سعر التجزئة قطر" },
-            { title: "سبائك PAMP", icon: "🏭", usd: globalGoldUSD * pampMargin, qar: globalGoldUSD * pampMargin * exchangeRate, src: "استثمارية" }
+            { 
+                title: "السعر العالمي", 
+                icon: "🌍", 
+                usd: globalGoldUSD, 
+                qar: globalGoldUSD * exchangeRate, 
+                src: "GoldAPI.io" 
+            },
+            { 
+                title: "الفردان للصرافة", 
+                icon: "🏦", 
+                usd: globalGoldUSD * ALFARDAN_PREMIUM, 
+                qar: (globalGoldUSD * ALFARDAN_PREMIUM) * exchangeRate, 
+                src: "سعر التجزئة قطر" 
+            },
+            { 
+                title: "سبائك PAMP", 
+                icon: "🏭", 
+                // إضافة هامش طفيف فوق سعر الفردان لمحاكاة فرق السبيكة
+                usd: globalGoldUSD * (ALFARDAN_PREMIUM + 0.025), 
+                qar: (globalGoldUSD * (ALFARDAN_PREMIUM + 0.025)) * exchangeRate, 
+                src: "استثمارية" 
+            }
         ];
 
         document.getElementById('pricesGrid').innerHTML = cards.map(c => `
@@ -153,11 +167,9 @@
     async function fetchArabicNews() {
         const newsListDiv = document.getElementById('newsList');
         try {
-            // استخدام استعلام بحث بالعربية لضمان المصادر العربية
             const rssUrl = encodeURIComponent('https://news.google.com/rss/search?q=أسعار+الذهب+اقتصاد&hl=ar&gl=AE&ceid=AE:ar');
             const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
             const data = await res.json();
-            
             if(data.status === 'ok' && data.items.length > 0) {
                 newsListDiv.innerHTML = data.items.slice(0, 6).map(item => `
                     <a href="${item.link}" target="_blank" class="news-item">
@@ -165,11 +177,9 @@
                         ${item.title.split(' - ')[0]} 
                     </a>
                 `).join('');
-            } else {
-                newsListDiv.innerHTML = '<div class="news-item">لم يتم العثور على أخبار جديدة حالياً.</div>';
             }
         } catch(e) {
-            newsListDiv.innerHTML = '⚠️ تعذر جلب الأخبار العربية، يرجى المحاولة لاحقاً.';
+            newsListDiv.innerHTML = '⚠️ تعذر جلب الأخبار العربية حالياً.';
         }
     }
 
@@ -192,8 +202,7 @@
                 }]
             },
             options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
+                responsive: true, maintainAspectRatio: false, 
                 plugins: { legend: { display: false } },
                 scales: { x: { display: false }, y: { grid: { color: 'rgba(0,0,0,0.05)' } } }
             }
@@ -207,8 +216,8 @@
 
     document.getElementById('refreshBtn').onclick = updateAllData;
 
-    // بيانات وهمية للرسم البياني عند البدء فقط
-    for(let i=0; i<15; i++) chartHistory.push(2145 + Math.random()*15);
+    // بيانات وهمية للبداية
+    for(let i=0; i<15; i++) chartHistory.push(4550 + Math.random()*20);
     
     updateAllData();
 </script>
