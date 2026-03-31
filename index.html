@@ -3,518 +3,215 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>ذهب قطر | أسعار الذهب العالمية والمحلية</title>
-    <!-- Chart.js للرسوم البيانية -->
+    <title>ذهب قطر | أسعار الذهب الحية</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            transition: all 0.2s ease;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; transition: all 0.2s ease; }
         :root {
-            --bg-gradient-start: #0a1a1f;
-            --bg-gradient-end: #061015;
-            --card-bg: #fffef8;
-            --header-bg: linear-gradient(115deg, #e6b422 0%, #c47e1a 100%);
-            --text-primary: #1f2a1b;
-            --text-secondary: #7a531d;
-            --border-color: #f0e2ce;
-            --price-color: #1f4a5a;
-            --status-bg: #f4ede0;
-            --footnote-bg: #fcf8ef;
+            --bg-gradient-start: #0a1a1f; --bg-gradient-end: #061015;
+            --card-bg: #fffef8; --header-bg: linear-gradient(115deg, #e6b422 0%, #c47e1a 100%);
+            --text-primary: #1f2a1b; --text-secondary: #7a531d;
+            --border-color: #f0e2ce; --price-color: #1f4a5a;
+            --status-bg: #f4ede0; --footnote-bg: #fcf8ef;
         }
-
         body.dark {
-            --bg-gradient-start: #0a0a0a;
-            --bg-gradient-end: #000000;
-            --card-bg: #1a1a2e;
-            --header-bg: linear-gradient(115deg, #5a3a0a 0%, #3a2505 100%);
-            --text-primary: #e0d6b0;
-            --text-secondary: #d4a843;
-            --border-color: #2a2a3a;
-            --price-color: #6ab0c0;
-            --status-bg: #2a2a3a;
-            --footnote-bg: #1a1a2e;
+            --bg-gradient-start: #0a0a0a; --bg-gradient-end: #000000;
+            --card-bg: #1a1a2e; --header-bg: linear-gradient(115deg, #5a3a0a 0%, #3a2505 100%);
+            --text-primary: #e0d6b0; --text-secondary: #d4a843;
+            --border-color: #2a2a3a; --price-color: #6ab0c0;
+            --status-bg: #2a2a3a; --footnote-bg: #1a1a2e;
         }
-
-        body {
-            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
-            font-family: 'Segoe UI', 'Tahoma', 'Cairo', system-ui, sans-serif;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1300px;
-            margin: 0 auto;
-        }
-
-        .main-card {
-            background: var(--card-bg);
-            border-radius: 48px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
-            overflow: hidden;
-        }
-
-        .header {
-            background: var(--header-bg);
-            padding: 25px 24px;
-            text-align: center;
-            color: var(--text-primary);
-            position: relative;
-        }
-
-        .header h1 {
-            font-size: 1.8rem;
-            font-weight: 800;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .header h1 span {
-            background: #2c2418;
-            color: #ffdd99;
-            padding: 5px 16px;
-            border-radius: 60px;
-            font-size: 0.8rem;
-        }
-
-        .theme-toggle {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.3);
-            border: none;
-            border-radius: 50px;
-            padding: 8px 15px;
-            color: white;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-
-        .controls-bar {
-            background: var(--status-bg);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .refresh-select {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            padding: 6px 12px;
-            border-radius: 30px;
-            font-family: inherit;
-            color: var(--text-secondary);
-        }
-
-        .share-btn, .alert-btn {
-            background: #c2822c;
-            border: none;
-            padding: 6px 15px;
-            border-radius: 30px;
-            color: white;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .alert-btn {
-            background: #2a7a4a;
-        }
-
-        .prices-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            padding: 25px 25px 15px;
-        }
-
-        @media (max-width: 900px) {
-            .prices-grid { grid-template-columns: 1fr; gap: 20px; }
-        }
-
-        .price-card {
-            background: var(--card-bg);
-            border-radius: 32px;
-            padding: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            border: 1px solid var(--border-color);
-        }
-
-        .price-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 15px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid var(--border-color);
-        }
-
-        .price-header .icon { font-size: 2rem; }
+        body { background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%); font-family: 'Segoe UI', Tahoma, sans-serif; min-height: 100vh; padding: 20px; }
+        .container { max-width: 1300px; margin: 0 auto; }
+        .main-card { background: var(--card-bg); border-radius: 48px; box-shadow: 0 25px 50px rgba(0,0,0,0.4); overflow: hidden; }
+        .header { background: var(--header-bg); padding: 25px; text-align: center; color: var(--text-primary); position: relative; }
+        .header h1 { font-size: 1.8rem; font-weight: 800; }
+        .theme-toggle { position: absolute; top: 20px; left: 20px; background: rgba(0,0,0,0.3); border: none; border-radius: 50px; padding: 8px 15px; color: white; cursor: pointer; }
+        .controls-bar { background: var(--status-bg); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .prices-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 25px; }
+        @media (max-width: 900px) { .prices-grid { grid-template-columns: 1fr; } }
+        .price-card { background: var(--card-bg); border-radius: 32px; padding: 20px; border: 1px solid var(--border-color); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        .price-header { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; }
         .price-header h2 { font-size: 1.1rem; color: var(--text-secondary); }
-        .price-header .source { font-size: 0.65rem; background: var(--status-bg); padding: 3px 10px; border-radius: 20px; }
-
-        .price-amount { margin: 12px 0 8px; }
+        .price-amount { margin: 12px 0; display: flex; align-items: baseline; justify-content: flex-start; gap: 8px; }
+        .price-label { font-size: 0.8rem; color: #b87a2e; font-weight: bold; min-width: 35px; }
         .price-number { font-size: 2.2rem; font-weight: 800; color: var(--price-color); }
-        .currency { font-size: 1rem; color: #b87a2e; }
-
-        .daily-change {
-            font-size: 0.75rem;
-            margin-top: 8px;
-            padding: 5px;
-            border-radius: 20px;
-            display: inline-block;
-        }
-        .positive { color: #2a7a3b; background: #e2f3e4; }
-        .negative { color: #b13e3e; background: #ffe6e5; }
-
-        .chart-container {
-            padding: 20px 25px;
-            border-top: 1px solid var(--border-color);
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .alert-panel {
-            background: var(--status-bg);
-            margin: 15px 25px;
-            padding: 15px 20px;
-            border-radius: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .alert-panel input {
-            padding: 8px 12px;
-            border-radius: 30px;
-            border: 1px solid var(--border-color);
-            width: 120px;
-            background: var(--card-bg);
-            color: var(--text-secondary);
-        }
-        .alert-panel button {
-            background: #c2822c;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 30px;
-            color: white;
-            cursor: pointer;
-        }
-
-        .news-section {
-            padding: 20px 25px;
-            border-top: 1px solid var(--border-color);
-        }
-        .news-title {
-            font-weight: bold;
-            margin-bottom: 12px;
-            color: var(--text-secondary);
-        }
-        .news-item {
-            font-size: 0.8rem;
-            padding: 8px 0;
-            border-bottom: 1px dashed var(--border-color);
-            color: var(--price-color);
-        }
-
-        .status-bar {
-            background: var(--status-bg);
-            border-radius: 60px;
-            padding: 12px 20px;
-            margin: 0 25px 20px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .refresh-indicator { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; }
-        .spinner { width: 16px; height: 16px; border: 2px solid #dba450; border-top: 2px solid #f5bc70; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; }
+        .currency { font-size: 1rem; color: #b87a2e; font-weight: bold; }
+        .chart-container { padding: 20px 25px; border-top: 1px solid var(--border-color); }
+        .news-section { padding: 20px 25px; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.01); }
+        .news-title { font-weight: bold; margin-bottom: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
+        .news-item { font-size: 0.88rem; padding: 12px 0; border-bottom: 1px dashed var(--border-color); display: block; text-decoration: none; color: var(--price-color); line-height: 1.6; }
+        .news-item:hover { background: rgba(0,0,0,0.02); }
+        .news-item span { font-size: 0.75rem; color: #888; margin-left: 10px; display: inline-block; }
+        .status-bar { background: var(--status-bg); padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-refresh { background: #c2822c; border: none; padding: 10px 25px; border-radius: 40px; color: white; cursor: pointer; font-weight: bold; }
+        .spinner { width: 16px; height: 16px; border: 2px solid #fff; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-left: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .btn-refresh { background: #c2822c; border: none; padding: 6px 20px; border-radius: 40px; color: white; cursor: pointer; }
-
-        .footnote { text-align: center; padding: 15px; font-size: 0.65rem; color: #b59762; background: var(--footnote-bg); border-top: 1px solid var(--border-color); }
-
-        @media (max-width: 550px) {
-            .price-number { font-size: 1.6rem; }
-            .header h1 { font-size: 1.3rem; }
-        }
     </style>
 </head>
 <body>
+
 <div class="container">
     <div class="main-card">
         <div class="header">
             <button class="theme-toggle" id="themeToggle">🌙 الوضع الليلي</button>
-            <h1>📊 سعر الذهب <span>عالمي · الفردان · PAMP</span></h1>
-            <div style="font-size: 0.7rem; margin-top: 5px;">تحديث تلقائي | رسم بياني | تنبيهات</div>
+            <h1>📊 بورصة الذهب المباشرة <span>قطر & عالمياً</span></h1>
         </div>
 
         <div class="controls-bar">
             <div>
-                <label style="margin-left: 8px;">⏱️ التحديث كل:</label>
-                <select id="refreshIntervalSelect" class="refresh-select">
+                <label>⏱️ تحديث:</label>
+                <select id="refreshIntervalSelect" style="padding: 5px; border-radius: 10px; border: 1px solid var(--border-color);">
                     <option value="15">15 دقيقة</option>
-                    <option value="30">30 دقيقة</option>
                     <option value="60" selected>ساعة</option>
-                    <option value="120">ساعتين</option>
                 </select>
             </div>
-            <div>
-                <button id="shareBtn" class="share-btn">📤 مشاركة السعر</button>
-                <button id="alertSettingBtn" class="alert-btn">🔔 تعيين تنبيه</button>
-            </div>
+            <button id="shareBtn" style="background:#c2822c; color:white; border:none; padding: 8px 20px; border-radius: 20px; cursor:pointer;">📤 مشاركة السعر</button>
         </div>
 
-        <div class="prices-grid" id="pricesGrid">
-            <!-- سيتم ملء البطاقات بواسطة JS -->
-        </div>
+        <div class="prices-grid" id="pricesGrid"></div>
 
-        <!-- لوحة التنبيه -->
-        <div class="alert-panel" id="alertPanel" style="display: none;">
-            <span>🔔 تنبيه عند وصول سعر الفردان (QAR) إلى:</span>
-            <input type="number" id="alertPriceInput" placeholder="السعر المستهدف" step="10">
-            <button id="saveAlertBtn">حفظ التنبيه</button>
-            <button id="cancelAlertBtn">إلغاء</button>
-        </div>
-
-        <!-- الرسم البياني -->
         <div class="chart-container">
-            <canvas id="goldChart" width="400" height="200" style="max-height: 250px; width: 100%;"></canvas>
+            <canvas id="goldChart" style="max-height: 250px; width: 100%;"></canvas>
         </div>
 
-        <!-- أخبار الذهب -->
         <div class="news-section">
-            <div class="news-title">📰 آخر أخبار الذهب</div>
-            <div id="newsList">جاري تحميل الأخبار...</div>
+            <div class="news-title">📰 آخر أخبار الذهب الاقتصادية (تحديث لحظي بالعربية)</div>
+            <div id="newsList">جاري جلب آخر التقارير الاقتصادية...</div>
         </div>
 
         <div class="status-bar">
-            <div class="refresh-indicator"><span class="spinner" id="spinnerIcon" style="display: none;"></span><span id="autoStatus">⏳ جاهز</span></div>
-            <button class="btn-refresh" id="refreshBtn">🔄 تحديث الآن</button>
+            <div id="autoStatus" style="font-size: 0.85rem; color: #b59762;">⏳ جاهز للتحديث</div>
+            <button class="btn-refresh" id="refreshBtn">🔄 تحديث البيانات الآن</button>
         </div>
-        <div class="footnote">بيانات حية من GoldAPI.io | تحديث تلقائي | يمكنك تعيين تنبيه عند وصول السعر المستهدف</div>
     </div>
 </div>
 
 <script>
-    // ---------- المتغيرات العامة ----------
-    let globalGoldUSD = 4566.50, globalGoldQAR = 16622.06;
-    let alfardanGoldUSD = 5130.00, alfardanGoldQAR = 18675.00;
-    let pampGoldUSD = 4794.82, pampGoldQAR = 17453.16;
+    let globalGoldUSD = 2150.00; 
     let exchangeRate = 3.64;
-    let dailyChangeUSD = 0, dailyChangePercent = 0;
-    let chartHistory = []; // آخر 24 قيمة (ساعة بساعة)
+    let chartHistory = [];
     let chart = null;
-    let alertTarget = null;
-    let updateIntervalId = null;
-    let currentIntervalMinutes = 60;
 
-    // هوامش ثابتة
-    const ALFARDAN_MARGIN = 12.35;
-    const PAMP_MARGIN = 5.0;
+    async function updateAllData() {
+        const btn = document.getElementById('refreshBtn');
+        btn.innerHTML = '<span class="spinner"></span> جاري التحديث...';
+        
+        try {
+            // 1. جلب السعر
+            const res = await fetch('https://www.goldapi.io/api/XAU/USD', { 
+                headers: { 'x-access-token': 'goldapi-1brp87slm3r7p6w-io' } 
+            });
+            const data = await res.json();
+            if(data.price) {
+                globalGoldUSD = data.price;
+                if(chartHistory.length >= 24) chartHistory.shift();
+                chartHistory.push(globalGoldUSD);
+            }
 
-    // عناصر DOM
-    const pricesGrid = document.getElementById('pricesGrid');
-    const themeToggle = document.getElementById('themeToggle');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const shareBtn = document.getElementById('shareBtn');
-    const alertSettingBtn = document.getElementById('alertSettingBtn');
-    const alertPanel = document.getElementById('alertPanel');
-    const saveAlertBtn = document.getElementById('saveAlertBtn');
-    const cancelAlertBtn = document.getElementById('cancelAlertBtn');
-    const alertPriceInput = document.getElementById('alertPriceInput');
-    const refreshIntervalSelect = document.getElementById('refreshIntervalSelect');
-    const autoStatusSpan = document.getElementById('autoStatus');
-    const spinnerIcon = document.getElementById('spinnerIcon');
-    const newsListDiv = document.getElementById('newsList');
+            // 2. جلب الأخبار العربية
+            await fetchArabicNews();
 
-    // تحميل آخر سعر محفوظ
-    function loadStoredData() {
-        let stored = localStorage.getItem('goldPrices');
-        if(stored) {
-            try{
-                let data = JSON.parse(stored);
-                if(data.globalUSD) globalGoldUSD = data.globalUSD;
-                if(data.alfardanQAR) alfardanGoldQAR = data.alfardanQAR;
-                if(data.exchangeRate) exchangeRate = data.exchangeRate;
-                if(data.chartHistory) chartHistory = data.chartHistory;
-                if(data.alertTarget) alertTarget = data.alertTarget;
-            }catch(e){}
+            renderPrices();
+            updateChart();
+            
+        } catch(e) {
+            console.log("Error during update");
         }
-        if(chartHistory.length === 0) {
-            for(let i=0;i<24;i++) chartHistory.push(globalGoldUSD);
-        }
-        calculateAllPrices();
+        
+        btn.innerHTML = '🔄 تحديث البيانات الآن';
     }
 
-    function saveToLocalStorage() {
-        let data = { globalUSD: globalGoldUSD, alfardanQAR: alfardanGoldQAR, exchangeRate, chartHistory, alertTarget };
-        localStorage.setItem('goldPrices', JSON.stringify(data));
-    }
+    function renderPrices() {
+        const alfardanMargin = 1.1235; 
+        const pampMargin = 1.05;      
 
-    function calculateAllPrices() {
-        alfardanGoldUSD = globalGoldUSD * (1 + ALFARDAN_MARGIN/100);
-        alfardanGoldQAR = alfardanGoldUSD * exchangeRate;
-        pampGoldUSD = globalGoldUSD * (1 + PAMP_MARGIN/100);
-        pampGoldQAR = pampGoldUSD * exchangeRate;
-        saveToLocalStorage();
-    }
-
-    function updateUI() {
         const cards = [
-            { icon: "🌍", title: "السوق العالمي", src: "GoldAPI.io", usd: globalGoldUSD, qar: globalGoldQAR },
-            { icon: "🏦", title: "الفردان للصرافة", src: "سعر التجزئة قطر", usd: alfardanGoldUSD, qar: alfardanGoldQAR },
-            { icon: "🏭", title: "سبائك PAMP", src: "استثمارية", usd: pampGoldUSD, qar: pampGoldQAR }
+            { title: "السعر العالمي", icon: "🌍", usd: globalGoldUSD, qar: globalGoldUSD * exchangeRate, src: "GoldAPI.io" },
+            { title: "الفردان للصرافة", icon: "🏦", usd: globalGoldUSD * alfardanMargin, qar: globalGoldUSD * alfardanMargin * exchangeRate, src: "سعر التجزئة قطر" },
+            { title: "سبائك PAMP", icon: "🏭", usd: globalGoldUSD * pampMargin, qar: globalGoldUSD * pampMargin * exchangeRate, src: "استثمارية" }
         ];
-        pricesGrid.innerHTML = cards.map(card => `
+
+        document.getElementById('pricesGrid').innerHTML = cards.map(c => `
             <div class="price-card">
-                <div class="price-header"><div class="icon">${card.icon}</div><div><h2>${card.title}</h2><div class="source">${card.src}</div></div></div>
-                <div class="price-amount"><span class="price-number">${card.usd.toFixed(2)}</span> <span class="currency">USD</span></div>
-                <div class="price-amount"><span class="price-number">${card.qar.toFixed(2)}</span> <span class="currency">QAR</span></div>
-                <div class="daily-change ${dailyChangePercent >= 0 ? 'positive' : 'negative'}">📊 التغير اليومي: ${dailyChangePercent >= 0 ? '+' : ''}${dailyChangePercent.toFixed(2)}% (${dailyChangeUSD >= 0 ? '+' : ''}${dailyChangeUSD.toFixed(2)} USD)</div>
+                <div class="price-header">
+                    <div style="font-size: 1.5rem;">${c.icon}</div>
+                    <div><h2>${c.title}</h2><div style="font-size:0.65rem; color:#999;">${c.src}</div></div>
+                </div>
+                <div class="price-amount">
+                    <span class="price-label">USD</span>
+                    <span class="price-number">${c.usd.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                </div>
+                <div class="price-amount">
+                    <span class="price-label">QAR</span>
+                    <span class="price-number">${c.qar.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                </div>
             </div>
         `).join('');
-        document.getElementById('globalUpdateTime')?.remove();
-        // تحديث التنبيه
-        if(alertTarget && alfardanGoldQAR >= alertTarget) {
-            alert(`🔔 تم تحقيق الهدف! سعر الفردان الآن ${alfardanGoldQAR.toFixed(2)} ريال قطري`);
-            alertTarget = null;
-            saveToLocalStorage();
-        }
     }
 
-    // جلب السعر العالمي وسعر الصرف
-    async function fetchGlobalPrice() {
+    async function fetchArabicNews() {
+        const newsListDiv = document.getElementById('newsList');
         try {
-            const res = await fetch('https://www.goldapi.io/api/XAU/USD', { headers: { 'x-access-token': 'demo' } });
-            if(res.ok) {
-                const data = await res.json();
-                if(data.price) {
-                    let newPrice = parseFloat(data.price);
-                    if(chartHistory.length >= 24) chartHistory.shift();
-                    chartHistory.push(newPrice);
-                    if(globalGoldUSD !== 0) {
-                        dailyChangeUSD = newPrice - globalGoldUSD;
-                        dailyChangePercent = (dailyChangeUSD / globalGoldUSD) * 100;
-                    }
-                    globalGoldUSD = newPrice;
-                }
+            // استخدام استعلام بحث بالعربية لضمان المصادر العربية
+            const rssUrl = encodeURIComponent('https://news.google.com/rss/search?q=أسعار+الذهب+اقتصاد&hl=ar&gl=AE&ceid=AE:ar');
+            const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
+            const data = await res.json();
+            
+            if(data.status === 'ok' && data.items.length > 0) {
+                newsListDiv.innerHTML = data.items.slice(0, 6).map(item => `
+                    <a href="${item.link}" target="_blank" class="news-item">
+                        <span>(${new Date(item.pubDate).toLocaleTimeString('ar-EG', {hour: '2-digit', minute:'2-digit'})})</span>
+                        ${item.title.split(' - ')[0]} 
+                    </a>
+                `).join('');
+            } else {
+                newsListDiv.innerHTML = '<div class="news-item">لم يتم العثور على أخبار جديدة حالياً.</div>';
             }
-            const exRes = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=QAR');
-            if(exRes.ok) {
-                const exData = await exRes.json();
-                if(exData.rates?.QAR) exchangeRate = parseFloat(exData.rates.QAR);
-            }
-            globalGoldQAR = globalGoldUSD * exchangeRate;
-            calculateAllPrices();
-            updateUI();
-            updateChart();
-            updateNews();
-            saveToLocalStorage();
-            return true;
-        } catch(e) { console.warn(e); return false; }
+        } catch(e) {
+            newsListDiv.innerHTML = '⚠️ تعذر جلب الأخبار العربية، يرجى المحاولة لاحقاً.';
+        }
     }
 
     function updateChart() {
-        if(chart) chart.destroy();
         const ctx = document.getElementById('goldChart').getContext('2d');
+        if(chart) chart.destroy();
         chart = new Chart(ctx, {
             type: 'line',
-            data: { labels: Array.from({length: chartHistory.length}, (_,i)=>i+''), datasets: [{ label: 'سعر الذهب (USD)', data: chartHistory, borderColor: '#e6b422', backgroundColor: 'rgba(230,180,34,0.1)', fill: true, tension: 0.3 }] },
-            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { position: 'top', rtl: true } } }
+            data: {
+                labels: chartHistory.map((_, i) => i),
+                datasets: [{ 
+                    label: 'السعر العالمي', 
+                    data: chartHistory, 
+                    borderColor: '#e6b422', 
+                    borderWidth: 3,
+                    pointRadius: 0,
+                    backgroundColor: 'rgba(230,180,34,0.1)', 
+                    fill: true, 
+                    tension: 0.4 
+                }]
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { grid: { color: 'rgba(0,0,0,0.05)' } } }
+            }
         });
     }
 
-    async function updateNews() {
-        const newsListDiv = document.getElementById('newsList');
-        newsListDiv.innerHTML = '<div class="refresh-indicator"><span class="spinner"></span> جاري جلب آخر المستجدات...</div>';
-        
-        try {
-            // ملاحظة: NewsAPI يتطلب مفتاح API، سنستخدم هنا رابط تجريبي أو محاكي لجلب بيانات متغيرة
-            // يمكنك التسجيل في newsapi.org والحصول على مفتاح مجاني ووضعه في الرابط أدناه
-            const apiKey = 'YOUR_NEWSAPI_KEY'; // ضع مفتاحك هنا إذا توفر
-            const url = `https://newsapi.org/v2/everything?q=gold+price+market&language=ar&sortBy=publishedAt&apiKey=${apiKey}`;
-            
-            // للحفاظ على عمل الكود لديك الآن، سنستخدم مصفوفة ذكية "شبه حية" 
-            // تقوم باختيار أخبار عشوائية من قاعدة بيانات محددة لتبدو محدثة دائماً عند كل تشغيل
-            const dynamicNewsPool = [
-                `📈 تحديث ${new Date().toLocaleTimeString('ar-EG')}: الذهب يستقر فوق مستويات الدعم الحيوية.`,
-                "🏦 تقرير: صناديق الاستثمار تزيد من حيازتها للسبائك هذا الأسبوع.",
-                "📊 توقعات بنك جولدمن ساكس تشير إلى ارتفاع الطلب الفيزيائي في الخليج.",
-                "⚡ تحركات الفيدرالي الأمريكي تدفع أسعار المعادن الثمينة للتذبذب.",
-                "🇶🇦 بورصة قطر: إقبال ملحوظ على شراء السبائك الصغيرة (100 جرام).",
-                "💰 أسعار الذهب الخام تسجل مستويات قياسية جديدة في المعاملات الفورية."
-            ];
-
-            // خلط الأخبار لضمان التجديد في كل تشغيل
-            const shuffledNews = dynamicNewsPool.sort(() => 0.5 - Math.random());
-            
-            // محاكاة تأخير بسيط للتحميل لإعطاء شعور بالاستجابة الحية
-            setTimeout(() => {
-                newsListDiv.innerHTML = shuffledNews.map(n => `<div class="news-item">${n}</div>`).join('');
-            }, 800);
-
-        } catch(e) { 
-            newsListDiv.innerHTML = '<div class="news-item">⚠️ تعذر الاتصال بخادم الأخبار، يرجى المحاولة لاحقاً.</div>'; 
-        }
-    }
-    // مشاركة السعر
-    shareBtn.onclick = () => {
-        let text = `سعر الذهب اليوم:\nالعالمي: ${globalGoldUSD} دولار (${globalGoldQAR.toFixed(2)} ريال)\nالفردان: ${alfardanGoldQAR.toFixed(2)} ريال\nPAMP: ${pampGoldQAR.toFixed(2)} ريال`;
-        if(navigator.share) navigator.share({title: 'أسعار الذهب', text});
-        else alert(text);
-    };
-
-    // التنبيهات
-    alertSettingBtn.onclick = () => { alertPanel.style.display = 'flex'; };
-    cancelAlertBtn.onclick = () => { alertPanel.style.display = 'none'; };
-    saveAlertBtn.onclick = () => {
-        let val = parseFloat(alertPriceInput.value);
-        if(!isNaN(val) && val > 0) {
-            alertTarget = val;
-            saveToLocalStorage();
-            alertPanel.style.display = 'none';
-            autoStatusSpan.innerHTML = `🔔 تم تعيين التنبيه عند ${val} ريال`;
-            setTimeout(()=> autoStatusSpan.innerHTML='⏳ جاهز', 3000);
-        } else alert('أدخل رقماً صحيحاً');
-    };
-
-    refreshIntervalSelect.onchange = () => {
-        currentIntervalMinutes = parseInt(refreshIntervalSelect.value);
-        startAutoRefresh(currentIntervalMinutes);
-        autoStatusSpan.innerHTML = `🔄 التحديث كل ${currentIntervalMinutes} دقيقة`;
-    };
-
-    // الوضع الليلي
-    themeToggle.onclick = () => {
+    document.getElementById('themeToggle').onclick = () => {
         document.body.classList.toggle('dark');
-        themeToggle.innerHTML = document.body.classList.contains('dark') ? '☀️ وضع النهار' : '🌙 الوضع الليلي';
+        document.getElementById('themeToggle').innerText = document.body.classList.contains('dark') ? '☀️ وضع النهار' : '🌙 الوضع الليلي';
     };
 
-    refreshBtn.onclick = async () => { await fullRefresh(); };
+    document.getElementById('refreshBtn').onclick = updateAllData;
 
-    async function init() {
-        loadStoredData();
-        updateUI();
-        await fetchGlobalPrice();
-        updateChart();
-        updateNews();
-        startAutoRefresh(currentIntervalMinutes);
-    }
-    init();
+    // بيانات وهمية للرسم البياني عند البدء فقط
+    for(let i=0; i<15; i++) chartHistory.push(2145 + Math.random()*15);
+    
+    updateAllData();
 </script>
+
 </body>
 </html>
