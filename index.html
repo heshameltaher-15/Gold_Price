@@ -1,0 +1,531 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>مقارنة سعر الذهب | عالمي · الفردان · PAMP</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #0a1a1f 0%, #061015 100%);
+            font-family: 'Segoe UI', 'Tahoma', 'Cairo', system-ui, sans-serif;
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .main-card {
+            background: #fffef8;
+            border-radius: 48px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(115deg, #e6b422 0%, #c47e1a 100%);
+            padding: 30px 24px;
+            text-align: center;
+            color: #1f2a1b;
+        }
+        .header h1 {
+            font-size: 1.9rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .header h1 span {
+            background: #2c2418;
+            color: #ffdd99;
+            padding: 5px 16px;
+            border-radius: 60px;
+            font-size: 0.9rem;
+        }
+        .sub {
+            margin-top: 12px;
+            font-size: 0.85rem;
+            background: rgba(0,0,0,0.2);
+            display: inline-block;
+            padding: 5px 22px;
+            border-radius: 40px;
+        }
+        .prices-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            padding: 30px 28px 20px;
+        }
+        @media (max-width: 900px) {
+            .prices-grid {
+                grid-template-columns: 1fr;
+                gap: 25px;
+            }
+        }
+        .price-card {
+            background: white;
+            border-radius: 36px;
+            padding: 24px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #f0e2ce;
+            transition: all 0.2s;
+        }
+        .price-card:hover { transform: translateY(-4px); }
+        .price-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f5e5cf;
+        }
+        .price-header .icon { font-size: 2.2rem; }
+        .price-header .title { flex: 1; }
+        .price-header h2 { font-size: 1.2rem; color: #7a531d; margin-bottom: 4px; }
+        .price-header .source {
+            font-size: 0.7rem;
+            background: #f0e8da;
+            padding: 4px 12px;
+            border-radius: 30px;
+            display: inline-block;
+            color: #8b691b;
+        }
+        .price-amount {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1f4a5a;
+            margin: 15px 0 10px;
+        }
+        .price-number {
+            font-size: 2.6rem;
+            background: linear-gradient(135deg, #1f4a5a, #2d6b7a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            font-weight: 800;
+        }
+        .currency { font-size: 1.1rem; color: #b87a2e; font-weight: 600; }
+        .update-time {
+            font-size: 0.7rem;
+            color: #9a8a6a;
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px dashed #eedfc2;
+        }
+        .margin-control {
+            background: #f5efe2;
+            border-radius: 60px;
+            padding: 12px 20px;
+            margin: 10px 28px 0 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .margin-control label { font-weight: 600; color: #7a531d; font-size: 0.85rem; }
+        .margin-control input {
+            width: 80px;
+            padding: 6px 12px;
+            border: 1px solid #e0ceb0;
+            border-radius: 30px;
+            font-size: 1rem;
+            text-align: center;
+            font-family: inherit;
+            background: white;
+        }
+        .margin-control span { color: #b87a2e; font-size: 0.8rem; }
+        .badge-info { background: #e8dcc8; padding: 2px 10px; border-radius: 20px; font-size: 0.7rem; }
+        .status-bar {
+            background: #f4ede0;
+            border-radius: 60px;
+            padding: 14px 24px;
+            margin: 0 28px 20px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .refresh-indicator { display: flex; align-items: center; gap: 10px; font-size: 0.8rem; color: #7a6236; }
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid #dba450;
+            border-top: 2px solid #f5bc70;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .btn-refresh {
+            background: #c2822c;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+        .btn-refresh:hover { background: #a5681f; transform: scale(0.96); }
+        .footnote {
+            text-align: center;
+            padding: 18px 24px 24px;
+            font-size: 0.7rem;
+            color: #b59762;
+            background: #fcf8ef;
+            border-top: 1px solid #efe0c4;
+        }
+        .live-price { font-size: 0.7rem; color: #2a7a4a; margin-top: 5px; }
+        .premium-badge {
+            background: #f0e8da;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="main-card">
+        <div class="header">
+            <h1>
+                📊 مقارنة سعر الذهب
+                <span>عالمي · الفردان · PAMP</span>
+            </h1>
+            <div class="sub">ثلاثة مصادر مختلفة لسعر أونصة الذهب • تحديث كل ساعة</div>
+        </div>
+
+        <!-- شريط التحكم بالهوامش -->
+        <div class="margin-control">
+            <div><label>⚙️ هامش الفردان:</label> <input type="number" id="alfardanMargin" step="0.1" value="12.35" style="width: 70px;"> <span>%</span></div>
+            <div><label>🏭 هامش سبائك PAMP:</label> <input type="number" id="pampMargin" step="0.1" value="5.0" style="width: 70px;"> <span>%</span></div>
+            <button id="applyMarginsBtn" style="background:#c2822c; border:none; padding:5px 20px; border-radius:30px; color:white; cursor:pointer;">تطبيق الهوامش</button>
+            <span class="badge-info">هامش PAMP يتراوح عالمياً بين 3% - 7%</span>
+        </div>
+
+        <div class="prices-grid">
+            <!-- 1. السوق العالمي -->
+            <div class="price-card">
+                <div class="price-header">
+                    <div class="icon">🌍</div>
+                    <div class="title">
+                        <h2>السوق العالمي</h2>
+                        <div class="source">GoldAPI.io • ذهب خام</div>
+                    </div>
+                </div>
+                <div class="price-amount">
+                    <span class="price-number" id="globalUSD">--.--</span> <span class="currency">USD</span>
+                </div>
+                <div class="price-amount">
+                    <span class="price-number" id="globalQAR">--.--</span> <span class="currency">QAR</span>
+                </div>
+                <div class="update-time">🕒 آخر تحديث: <span id="globalUpdateTime">--:--:--</span></div>
+                <div class="live-price">💱 سعر الصرف: <span id="exchangeRate">3.64</span> ريال/دولار</div>
+            </div>
+
+            <!-- 2. الفردان للصرافة -->
+            <div class="price-card">
+                <div class="price-header">
+                    <div class="icon">🏦</div>
+                    <div class="title">
+                        <h2>الفردان للصرافة</h2>
+                        <div class="source">سعر التجزئة في قطر</div>
+                    </div>
+                </div>
+                <div class="price-amount">
+                    <span class="price-number" id="alfardanUSD">--.--</span> <span class="currency">USD</span>
+                </div>
+                <div class="price-amount">
+                    <span class="price-number" id="alfardanQAR">--.--</span> <span class="currency">QAR</span>
+                </div>
+                <div class="update-time">🕒 آخر تحديث: <span id="alfardanUpdateTime">--:--:--</span></div>
+                <div class="live-price" id="alfardanNote">📌 هامش: <span id="alfardanMarginDisplay">12.35</span>%</div>
+            </div>
+
+            <!-- 3. سبائك PAMP -->
+            <div class="price-card">
+                <div class="price-header">
+                    <div class="icon">🏭</div>
+                    <div class="title">
+                        <h2>سبائك PAMP</h2>
+                        <div class="source">سعر سبائك PAMP الاستثمارية</div>
+                    </div>
+                </div>
+                <div class="price-amount">
+                    <span class="price-number" id="pampUSD">--.--</span> <span class="currency">USD</span>
+                </div>
+                <div class="price-amount">
+                    <span class="price-number" id="pampQAR">--.--</span> <span class="currency">QAR</span>
+                </div>
+                <div class="update-time">🕒 آخر تحديث: <span id="pampUpdateTime">--:--:--</span></div>
+                <div class="live-price" id="pampNote">🏭 هامش: <span id="pampMarginDisplay">5.0</span>% (فوق السوق العالمي)</div>
+            </div>
+        </div>
+
+        <!-- بطاقة الفروقات -->
+        <div class="margin-control" style="background: linear-gradient(115deg, #1e3a3f 0%, #143238 100%); color: white; justify-content: space-around;">
+            <div>📊 الفرق: <strong id="diffAlfardan">--.--</strong> QAR (الفردان)</div>
+            <div>🏭 الفرق: <strong id="diffPamp">--.--</strong> QAR (PAMP)</div>
+        </div>
+
+        <div class="status-bar">
+            <div class="refresh-indicator">
+                <span class="spinner" id="spinnerIcon" style="display: none;"></span>
+                <span id="autoStatus">⏳ تحديث تلقائي كل 60 دقيقة</span>
+            </div>
+            <button class="btn-refresh" id="refreshBtn">🔄 تحديث جميع الأسعار الآن</button>
+        </div>
+
+        <div class="footnote">
+            <strong>📌 ملاحظة:</strong> السعر العالمي من GoldAPI.io (بيانات حية). سعر الفردان يُحسب بهامش قابل للتعديل (افتراضي 12.35% بناءً على صور الأسعار).<br>
+            <strong>🏭 سعر سبائك PAMP</strong> يُحسب بهامش إضافي فوق السعر العالمي يتراوح عالمياً بين 3% - 7% (قابل للتعديل يدوياً). الموقع الرسمي لـ PAMP لا يوفر API عام.
+        </div>
+    </div>
+</div>
+
+<script>
+    // عناصر DOM
+    const globalUSDSpan = document.getElementById('globalUSD');
+    const globalQARSpan = document.getElementById('globalQAR');
+    const alfardanUSDSpan = document.getElementById('alfardanUSD');
+    const alfardanQARSpan = document.getElementById('alfardanQAR');
+    const pampUSDSpan = document.getElementById('pampUSD');
+    const pampQARSpan = document.getElementById('pampQAR');
+    const globalUpdateSpan = document.getElementById('globalUpdateTime');
+    const alfardanUpdateSpan = document.getElementById('alfardanUpdateTime');
+    const pampUpdateSpan = document.getElementById('pampUpdateTime');
+    const exchangeRateSpan = document.getElementById('exchangeRate');
+    const autoStatusSpan = document.getElementById('autoStatus');
+    const spinnerIcon = document.getElementById('spinnerIcon');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const diffAlfardanSpan = document.getElementById('diffAlfardan');
+    const diffPampSpan = document.getElementById('diffPamp');
+    const alfardanMarginInput = document.getElementById('alfardanMargin');
+    const pampMarginInput = document.getElementById('pampMargin');
+    const applyMarginsBtn = document.getElementById('applyMarginsBtn');
+    const alfardanMarginDisplay = document.getElementById('alfardanMarginDisplay');
+    const pampMarginDisplay = document.getElementById('pampMarginDisplay');
+
+    // متغيرات البيانات
+    let globalGoldUSD = null;
+    let globalGoldQAR = null;
+    let alfardanGoldUSD = null, alfardanGoldQAR = null;
+    let pampGoldUSD = null, pampGoldQAR = null;
+    let exchangeRate = 3.64;
+    
+    // هوامش قابلة للتعديل
+    let alfardanMargin = 12.35;
+    let pampMargin = 5.0;
+    
+    let updateInterval = null;
+
+    function formatTime() {
+        return new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function setLoading(isLoading) {
+        if (isLoading) {
+            spinnerIcon.style.display = 'inline-block';
+            autoStatusSpan.innerHTML = '🔄 جاري تحديث الأسعار ...';
+        } else {
+            spinnerIcon.style.display = 'none';
+        }
+    }
+
+    // حساب جميع الأسعار بناءً على السعر العالمي والهوامش
+    function calculateAllPrices() {
+        if (globalGoldUSD !== null && globalGoldUSD > 0) {
+            // 1. الفردان
+            alfardanGoldUSD = globalGoldUSD * (1 + alfardanMargin / 100);
+            alfardanGoldQAR = alfardanGoldUSD * exchangeRate;
+            alfardanUSDSpan.innerText = alfardanGoldUSD.toFixed(2);
+            alfardanQARSpan.innerText = alfardanGoldQAR.toFixed(2);
+            alfardanUpdateSpan.innerText = formatTime();
+            alfardanMarginDisplay.innerText = alfardanMargin;
+            
+            // 2. سبائك PAMP
+            pampGoldUSD = globalGoldUSD * (1 + pampMargin / 100);
+            pampGoldQAR = pampGoldUSD * exchangeRate;
+            pampUSDSpan.innerText = pampGoldUSD.toFixed(2);
+            pampQARSpan.innerText = pampGoldQAR.toFixed(2);
+            pampUpdateSpan.innerText = formatTime();
+            pampMarginDisplay.innerText = pampMargin;
+            
+            // عرض الفروقات
+            if (globalGoldQAR !== null) {
+                diffAlfardanSpan.innerHTML = (alfardanGoldQAR - globalGoldQAR).toFixed(2);
+                diffPampSpan.innerHTML = (pampGoldQAR - globalGoldQAR).toFixed(2);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    // جلب السعر العالمي وسعر الصرف
+    async function fetchGlobalPrice() {
+        try {
+            const goldResponse = await fetch('https://www.goldapi.io/api/XAU/USD', {
+                headers: { 'x-access-token': 'demo', 'Content-Type': 'application/json' }
+            });
+            
+            if (goldResponse.ok) {
+                const goldData = await goldResponse.json();
+                if (goldData && goldData.price) {
+                    globalGoldUSD = parseFloat(goldData.price);
+                } else throw new Error('بيانات غير صالحة');
+            } else throw new Error('فشل الاتصال بـ GoldAPI');
+            
+            // جلب سعر الصرف
+            try {
+                const exchangeResponse = await fetch('https://api.exchangerate.host/latest?base=USD&symbols=QAR');
+                if (exchangeResponse.ok) {
+                    const exchangeData = await exchangeResponse.json();
+                    if (exchangeData && exchangeData.rates && exchangeData.rates.QAR) {
+                        exchangeRate = parseFloat(exchangeData.rates.QAR);
+                        exchangeRateSpan.innerText = exchangeRate.toFixed(4);
+                    }
+                }
+            } catch (exchangeErr) {
+                console.warn('تعذر جلب سعر الصرف');
+                exchangeRateSpan.innerText = exchangeRate.toFixed(4);
+            }
+            
+            if (globalGoldUSD !== null && !isNaN(globalGoldUSD)) {
+                globalGoldQAR = globalGoldUSD * exchangeRate;
+            }
+            
+            globalUSDSpan.innerText = globalGoldUSD !== null ? globalGoldUSD.toFixed(2) : '--.--';
+            globalQARSpan.innerText = globalGoldQAR !== null ? globalGoldQAR.toFixed(2) : '--.--';
+            globalUpdateSpan.innerText = formatTime();
+            
+            return true;
+        } catch (error) {
+            console.error('خطأ في جلب السعر العالمي:', error);
+            if (globalGoldUSD === null) {
+                globalGoldUSD = 4566.50;
+                globalGoldQAR = globalGoldUSD * exchangeRate;
+                globalUSDSpan.innerText = globalGoldUSD.toFixed(2);
+                globalQARSpan.innerText = globalGoldQAR.toFixed(2);
+                globalUpdateSpan.innerText = formatTime();
+                autoStatusSpan.innerHTML = '⚠️ عرض آخر سعر معروف (تقديري)';
+            }
+            return false;
+        }
+    }
+
+    // تحديث كل البيانات
+    async function refreshAllData(showMessage = true) {
+        setLoading(true);
+        if (showMessage) autoStatusSpan.innerHTML = '🌍 جلب سعر الذهب العالمي ...';
+        
+        const globalSuccess = await fetchGlobalPrice();
+        
+        if (globalGoldUSD !== null) {
+            calculateAllPrices();
+        }
+        
+        if (globalSuccess) {
+            autoStatusSpan.innerHTML = '✅ تم تحديث جميع الأسعار بنجاح • تحديث كل ساعة';
+        } else {
+            autoStatusSpan.innerHTML = '⚠️ تم التحديث ببيانات تقديرية • إعادة المحاولة تلقائياً';
+        }
+        
+        setLoading(false);
+        
+        setTimeout(() => {
+            if (autoStatusSpan.innerHTML.includes('تم تحديث') || autoStatusSpan.innerHTML.includes('تقديرية')) {
+                autoStatusSpan.innerHTML = '⏳ تحديث تلقائي كل 60 دقيقة';
+            }
+        }, 4000);
+    }
+    
+    // تحديث الهوامش وإعادة الحساب
+    function updateMargins() {
+        let newAlfardan = parseFloat(alfardanMarginInput.value);
+        let newPamp = parseFloat(pampMarginInput.value);
+        
+        if (!isNaN(newAlfardan) && newAlfardan >= 0 && newAlfardan <= 30) {
+            alfardanMargin = newAlfardan;
+        } else {
+            alfardanMarginInput.value = alfardanMargin;
+        }
+        
+        if (!isNaN(newPamp) && newPamp >= 0 && newPamp <= 30) {
+            pampMargin = newPamp;
+        } else {
+            pampMarginInput.value = pampMargin;
+        }
+        
+        if (globalGoldUSD !== null) {
+            calculateAllPrices();
+        }
+        
+        autoStatusSpan.innerHTML = `✅ تم تحديث الهوامش: الفردان ${alfardanMargin}% | PAMP ${pampMargin}%`;
+        setTimeout(() => {
+            if (autoStatusSpan.innerHTML.includes('تم تحديث الهوامش')) {
+                autoStatusSpan.innerHTML = '⏳ تحديث تلقائي كل 60 دقيقة';
+            }
+        }, 2000);
+    }
+    
+    async function manualRefresh() {
+        autoStatusSpan.innerHTML = '⚡ تحديث يدوي فوري ...';
+        await refreshAllData(true);
+        if (updateInterval) clearInterval(updateInterval);
+        startAutoRefresh();
+    }
+    
+    function startAutoRefresh() {
+        if (updateInterval) clearInterval(updateInterval);
+        updateInterval = setInterval(() => refreshAllData(true), 3600000);
+    }
+    
+    // عرض العد التنازلي
+    function startCountdown() {
+        setInterval(() => {
+            const globalTime = globalUpdateSpan.innerText;
+            if (globalTime !== '--:--:--') {
+                const now = new Date();
+                const [hours, minutes, seconds] = globalTime.split(':');
+                let lastDate = new Date();
+                lastDate.setHours(parseInt(hours), parseInt(minutes), parseInt(seconds));
+                let diff = now - lastDate;
+                let remaining = 3600000 - (diff % 3600000);
+                if (remaining > 0 && remaining < 3600000) {
+                    let remMin = Math.floor(remaining / 60000);
+                    let remSec = Math.floor((remaining % 60000) / 1000);
+                    let countdownSpan = document.getElementById('countdownHint');
+                    if (!countdownSpan) {
+                        let container = document.querySelector('.refresh-indicator');
+                        if (container) {
+                            let span = document.createElement('span');
+                            span.id = 'countdownHint';
+                            span.style.fontSize = '0.7rem';
+                            span.style.marginRight = '10px';
+                            span.style.background = '#e6d9c2';
+                            span.style.padding = '2px 12px';
+                            span.style.borderRadius = '40px';
+                            container.appendChild(span);
+                            countdownSpan = span;
+                        }
+                    }
+                    if (countdownSpan) countdownSpan.innerHTML = `⏱️ تحديث تلقائي بعد ${remMin}د ${remSec}ث`;
+                }
+            }
+        }, 1000);
+    }
+    
+    async function init() {
+        await refreshAllData(true);
+        startAutoRefresh();
+        refreshBtn.addEventListener('click', manualRefresh);
+        applyMarginsBtn.addEventListener('click', updateMargins);
+        startCountdown();
+    }
+    
+    init();
+</script>
+</body>
+</html>
